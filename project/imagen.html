@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agrosoft CM – Diagrama de Hardware (mejorado)</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#0f172a; --muted:#475569; --border:#e2e8f0; --accent:#16a34a; --accent2:#0ea5e9;
+      --card:#f8fafc; --shadow:0 8px 22px rgba(2,6,23,.08);
+    }
+    @media (prefers-color-scheme: dark){
+      :root{ --bg:#0b1220; --fg:#e2e8f0; --muted:#94a3b8; --border:#1f2937; --accent:#22c55e; --accent2:#38bdf8; --card:#0f172a; }
+    }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
+    .wrap{max-width:980px;margin:36px auto;padding:20px}
+    h1{font-size:clamp(22px,3vw,30px);margin:0 0 6px}
+    .subtitle{color:var(--muted);margin:0 0 16px}
+
+    .board{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:8px}
+    .svg{width:100%;height:auto}
+
+    .node{fill:#fff;stroke:var(--border);stroke-width:2;rx:12;filter:url(#softShadow)}
+    .title{font:700 13px/1 Inter,ui-sans-serif;fill:var(--fg);letter-spacing:.2px}
+    .small{font:400 11px/1.35 Inter,ui-sans-serif;fill:var(--muted)}
+
+    .wire{stroke:var(--accent2);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;color:var(--accent2);marker-end:url(#arrow)}
+    .wire-off{stroke:var(--accent);stroke-width:2;fill:none;stroke-dasharray:6 6;stroke-linecap:round;stroke-linejoin:round;color:var(--accent);marker-end:url(#arrow)}
+    .dot{fill:var(--accent2);filter:url(#glow)}
+
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 12px;color:var(--muted);font-size:12px}
+    .legend .sw{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--accent2);margin-right:6px}
+    .legend .sw2{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--accent);margin-right:6px}
+    .emoji rect{filter:url(#softShadow)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Arquitectura de Hardware – Agrosoft CM</h1>
+  <p class="subtitle">Mismas posiciones y tamaños; íconos y estética mejorados (nube, conectividad, servidor, UPS, offline, expansión).</p>
+
+  <div class="board">
+    <svg class="svg" viewBox="0 0 900 680" role="img" aria-label="Diagrama de hardware Agrosoft CM (mejorado)">
+      <defs>
+        <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+          <path d="M24 0H0V24" fill="none" stroke="currentColor" stroke-opacity=".06"/>
+        </pattern>
+
+        <filter id="softShadow" x="-15%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-opacity=".12"/>
+        </filter>
+        <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="1.6" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+
+        <marker id="arrow" markerWidth="14" markerHeight="14" refX="11.5" refY="6.5" orient="auto" markerUnits="strokeWidth">
+          <path d="M1,1 L12.5,6.5 L1,12 z" fill="currentColor"/>
+        </marker>
+
+        <!-- Íconos -->
+        <symbol id="ico-cloud" viewBox="0 0 24 24">
+          <path d="M7 18h10.2a3.8 3.8 0 0 0 .5-7.56A6.5 6.5 0 0 0 6.2 9.4 4.9 4.9 0 0 0 7 18Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M8.5 14.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="ico-server" viewBox="0 0 24 24">
+          <rect x="3" y="3.5" width="18" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <rect x="3" y="13.5" width="18" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="7" cy="7" r="1.2" fill="currentColor"/><circle cx="7" cy="17" r="1.2" fill="currentColor"/>
+          <rect x="10" y="6.2" width="8.2" height="1.6" rx="0.8" fill="currentColor"/>
+          <rect x="10" y="16.2" width="8.2" height="1.6" rx="0.8" fill="currentColor"/>
+        </symbol>
+        <symbol id="ico-router" viewBox="0 0 24 24">
+          <rect x="3" y="12" width="18" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M6 8.2a9 9 0 0 1 12 0M8 10.2a7 7 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="7.8" cy="15.5" r="0.9" fill="currentColor"/><circle cx="11.5" cy="15.5" r="0.9" fill="currentColor"/><circle cx="15.2" cy="15.5" r="0.9" fill="currentColor"/>
+        </symbol>
+        <symbol id="ico-ups" viewBox="0 0 24 24">
+          <rect x="3.5" y="6.8" width="17" height="10.4" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8 10.2h6.5v4.4H8z" fill="currentColor"/><path d="M18.7 10.2h2.1v4.4h-2.1z" fill="currentColor"/>
+          <path d="M9.8 8l2.2-3 2.2 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="ico-sd" viewBox="0 0 24 24">
+          <path d="M7 4h7.2L19 8.8V20a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <rect x="9" y="8" width="2" height="3" rx=".6" fill="currentColor"/><rect x="12" y="8" width="2" height="3" rx=".6" fill="currentColor"/><rect x="15" y="8" width="2" height="3" rx=".6" fill="currentColor"/>
+          <rect x="8" y="14.5" width="8" height="3" rx="1.2" fill="currentColor"/>
+        </symbol>
+        <symbol id="ico-iot" viewBox="0 0 24 24">
+          <circle cx="6" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="18" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <rect x="10.2" y="9" width="3.6" height="6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M6 9l6-4 6 4M6 15l6 4 6-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="ico-cam" viewBox="0 0 24 24">
+          <rect x="3.5" y="7" width="17" height="10" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+          <path d="M7 7.8h3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </symbol>
+
+        <!-- Gradientes -->
+        <linearGradient id="grad-cloud" x1="0" x2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient>
+        <linearGradient id="grad-conn" x1="0" x2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+        <linearGradient id="grad-server" x1="0" x2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient>
+        <linearGradient id="grad-ups" x1="0" x2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#f97316"/></linearGradient>
+        <linearGradient id="grad-offline" x1="0" x2="1"><stop offset="0" stop-color="#f43f5e"/><stop offset="1" stop-color="#ef4444"/></linearGradient>
+        <linearGradient id="grad-expand" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#06b6d4"/></linearGradient>
+
+        <!-- Clips de TEXTO (absolutos; siguen al translate de cada tarjeta) -->
+        <clipPath id="clip-200x90" clipPathUnits="userSpaceOnUse">
+          <rect x="14" y="10" width="140" height="70" rx="4"/>
+        </clipPath>
+        <clipPath id="clip-200x110" clipPathUnits="userSpaceOnUse">
+          <rect x="14" y="10" width="140" height="90" rx="4"/>
+        </clipPath>
+        <clipPath id="clip-500x110" clipPathUnits="userSpaceOnUse">
+          <rect x="14" y="10" width="430" height="90" rx="4"/>
+        </clipPath>
+        <!-- Clips para la NUBE (240×90) y NUBE ANCHA (280×90) -->
+        <clipPath id="clip-240x90" clipPathUnits="userSpaceOnUse">
+          <rect x="14" y="10" width="180" height="70" rx="4"/>
+        </clipPath>
+        <clipPath id="clip-280x90" clipPathUnits="userSpaceOnUse">
+          <!-- 220px de área de texto para dejar margen al icono -->
+          <rect x="14" y="10" width="220" height="70" rx="4"/>
+        </clipPath>
+
+        <!-- Clips de CARD (evitar desborde de badges) -->
+        <clipPath id="card-200x90" clipPathUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="200" height="90" rx="12"/>
+        </clipPath>
+        <clipPath id="card-200x110" clipPathUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="200" height="110" rx="12"/>
+        </clipPath>
+        <clipPath id="card-500x110" clipPathUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="500" height="110" rx="12"/>
+        </clipPath>
+        <clipPath id="card-240x90" clipPathUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="240" height="90" rx="12"/>
+        </clipPath>
+        <clipPath id="card-280x90" clipPathUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="280" height="90" rx="12"/>
+        </clipPath>
+      </defs>
+
+      <!-- Fondo -->
+      <rect x="0" y="0" width="900" height="680" fill="url(#grid)"/>
+
+      <!-- Nube (ANCHA 280×90, centrada en x=450) -->
+      <g transform="translate(310,40)" clip-path="url(#card-280x90)">
+        <rect class="node" x="0" y="0" width="280" height="90"/>
+        <g clip-path="url(#clip-280x90)">
+          <text class="title" x="14" y="24">Nube Agrosoft CM</text>
+          <text class="small" x="14" y="44">Modelos • Sincronización • Versionado</text>
+        </g>
+        <g class="emoji">
+          <rect x="224" y="12" width="44" height="44" rx="12" fill="url(#grad-cloud)"/>
+          <use href="#ico-cloud" x="228" y="16" width="36" height="36" style="color:#ffffff"/>
+        </g>
+      </g>
+
+      <!-- Conectividad -->
+      <g transform="translate(620,180)" clip-path="url(#card-200x90)">
+        <rect class="node" x="0" y="0" width="200" height="90"/>
+        <g clip-path="url(#clip-200x90)">
+          <text class="title" x="14" y="24">Conectividad</text>
+          <text class="small" x="14" y="44">Internet (HTTPS/TLS)</text>
+        </g>
+        <g class="emoji">
+          <rect x="146" y="12" width="44" height="44" rx="12" fill="url(#grad-conn)"/>
+          <use href="#ico-router" x="150" y="16" width="36" height="36" style="color:#ffffff"/>
+        </g>
+      </g>
+
+      <!-- Servidor local -->
+      <g transform="translate(350,300)" clip-path="url(#card-200x110)">
+        <rect class="node" x="0" y="0" width="200" height="110"/>
+        <g clip-path="url(#clip-200x110)">
+          <text class="title" x="14" y="24">Servidor Local</text>
+          <text class="small" x="14" y="44">CPU multicore • RAM</text>
+          <text class="small" x="14" y="64">DB tiempo real • Backups</text>
+        </g>
+        <g class="emoji">
+          <rect x="146" y="28" width="44" height="44" rx="12" fill="url(#grad-server)"/>
+          <use href="#ico-server" x="150" y="32" width="36" height="36" style="color:#ffffff"/>
+        </g>
+      </g>
+
+      <!-- UPS -->
+      <g transform="translate(80,300)" clip-path="url(#card-200x90)">
+        <rect class="node" x="0" y="0" width="200" height="90"/>
+        <g clip-path="url(#clip-200x90)">
+          <text class="title" x="14" y="24">UPS / Batería</text>
+          <text class="small" x="14" y="44">Respaldo eléctrico</text>
+        </g>
+        <g class="emoji">
+          <rect x="146" y="12" width="44" height="44" rx="12" fill="url(#grad-ups)"/>
+          <use href="#ico-ups" x="150" y="16" width="36" height="36" style="color:#ffffff"/>
+        </g>
+      </g>
+
+      <!-- Modo Offline (ahora 240×90, icono más a la derecha) -->
+      <g transform="translate(620,300)" clip-path="url(#card-240x90)">
+        <rect class="node" x="0" y="0" width="240" height="90"/>
+        <g clip-path="url(#clip-240x90)">
+          <text class="title" x="14" y="24">Modo Offline</text>
+          <text class="small" x="14" y="44">Almacenamiento local temporal</text>
+        </g>
+        <g class="emoji">
+          <rect x="182" y="12" width="44" height="44" rx="12" fill="url(#grad-offline)"/>
+          <use href="#ico-sd" x="186" y="16" width="36" height="36" style="color:#ffffff"/>
+        </g>
+      </g>
+
+      <!-- Expansión -->
+      <g transform="translate(200,500)" clip-path="url(#card-500x110)">
+        <rect class="node" x="0" y="0" width="500" height="110"/>
+        <g clip-path="url(#clip-500x110)">
+          <text class="title" x="14" y="24">Expansión Modular</text>
+          <text class="small" x="14" y="44">Nodos de procesamiento • Almacenamiento adicional</text>
+          <text class="small" x="14" y="64">IoT (sensores) • Visión por computadora</text>
+        </g>
+        <g class="emoji">
+          <rect x="402" y="28" width="44" height="44" rx="12" fill="url(#grad-expand)"/>
+          <use href="#ico-iot" x="406" y="32" width="36" height="36" style="color:#ffffff"/>
+        </g>
+        <g class="emoji">
+          <rect x="446" y="28" width="44" height="44" rx="12" fill="url(#grad-expand)"/>
+          <use href="#ico-cam" x="450" y="32" width="36" height="36" style="color:#ffffff"/>
+        </g>
+      </g>
+
+      <!-- CONEXIONES (mismas coordenadas) -->
+      <circle class="dot" cx="450" cy="130" r="3"/><path class="wire" d="M450,130 V300"/>
+      <circle class="dot" cx="620" cy="225" r="3"/><path class="wire" d="M620,225 H550 V300"/>
+      <circle class="dot" cx="280" cy="345" r="3"/><path class="wire" d="M280,345 H350"/>
+      <circle class="dot" cx="620" cy="345" r="3"/><path class="wire-off" d="M620,345 H550"/>
+      <circle class="dot" cx="450" cy="410" r="3"/><path class="wire" d="M450,410 V500"/>
+    </svg>
+
+    <div class="legend">
+      <span><span class="sw"></span>Conexión principal de datos</span>
+      <span><span class="sw2"></span>Conexión en modo offline / tolerancia a fallos</span>
+    </div>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Figura XX. Diagrama ortogonal de hardware (visual refinado, misma estructura).</p>
+</div>
+</body>
+</html>

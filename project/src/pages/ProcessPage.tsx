@@ -1,40 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { ProcessExecution, ProcessStep, ProcessStepExecution, Process } from '../types';
+import { ProcessExecution, ProcessStepExecution, Process } from '../types';
 import api from '../lib/api';
 import Button from '../components/ui/Button';
 import ProcessStepCard from '../components/processes/ProcessStepCard';
 import LoadingScreen from '../components/ui/LoadingScreen';
 
+// Normaliza un step execution (convierte strings del backend al union type del front)
+const normalizeStepExecution = (se: any): ProcessStepExecution => {
+  const validStatuses = ['pending', 'completed', 'error'] as const;
+  let status: ProcessStepExecution['status'];
+
+  if (validStatuses.includes(se.status)) {
+    status = se.status;
+  } else if (se.status === 'in_progress') {
+    status = 'pending';
+  } else {
+    // fallback seguro
+    status = 'pending';
+  }
+
+  return {
+    id: se.id,
+    process_execution_id: se.process_execution_id,
+    step_id: se.step_id,
+    status,
+    completed_at: se.completed_at ?? null,
+    error_description: se.error_description ?? null,
+    image_url: se.image_url ?? undefined,
+  };
+};
+
 const ProcessPage: React.FC = () => {
   const { processId } = useParams<{ processId: string }>();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processExecution, setProcessExecution] = useState<ProcessExecution | null>(null);
   const [process, setProcess] = useState<Process | null>(null);
   const [stepExecutions, setStepExecutions] = useState<ProcessStepExecution[]>([]);
-  
+
   useEffect(() => {
     const fetchProcessData = async () => {
       if (!processId) return;
-      
+
       try {
         setLoading(true);
-        // Fetch process execution data
+
+        // 1) ejecución + steps ejecución
         const [executionRes, stepsRes] = await Promise.all([
           api.get<ProcessExecution>(`/api/processes/execution/${processId}`),
-          api.get<ProcessStepExecution[]>(`/api/processes/execution/${processId}/steps`)
+          api.get<any[]>(`/api/processes/execution/${processId}/steps`),
         ]);
-        
+
         setProcessExecution(executionRes.data);
-        setStepExecutions(stepsRes.data);
-        
-        // Fetch process details
+        setStepExecutions((stepsRes.data ?? []).map(normalizeStepExecution));
+
+        // 2) proceso con sus pasos
         const processRes = await api.get<Process>(`/api/processes/${executionRes.data.process_id}`);
         setProcess(processRes.data);
       } catch (err) {
@@ -44,48 +68,43 @@ const ProcessPage: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProcessData();
   }, [processId]);
-  
+
   const handleCompleteStep = async () => {
     if (!processExecution || !process) return;
-    
-    const currentStep = process.steps.find(
-      step => step.order === processExecution.current_step
-    );
-    
+
+    const currentStep = process.steps.find((step) => step.order === processExecution.current_step);
     if (!currentStep) return;
-    
+
     try {
       setLoading(true);
-      // Complete the current step
+
       await api.post(`/api/processes/execution/${processId}/complete-step`, {
-        step_id: currentStep.id
+        step_id: currentStep.id,
       });
-      
-      // Update local state
-      const updatedStepExecutions = stepExecutions.map(se => 
-        se.step_id === currentStep.id 
-          ? { ...se, status: 'completed', completed_at: new Date().toISOString() } 
-          : se
+
+      // Actualiza el step actual a 'completed'
+      setStepExecutions((prev) =>
+        prev.map((se) =>
+          se.step_id === currentStep.id
+            ? { ...se, status: 'completed', completed_at: new Date().toISOString() }
+            : se
+        )
       );
-      
-      setStepExecutions(updatedStepExecutions);
-      
-      // Check if this was the last step
+
+      // Si era el último, marca ejecución 'completed'; si no, avanza current_step
       if (processExecution.current_step === process.steps.length) {
-        // Process is complete
         setProcessExecution({
           ...processExecution,
           status: 'completed',
-          completed_at: new Date().toISOString()
+          completed_at: new Date().toISOString(),
         });
       } else {
-        // Move to next step
         setProcessExecution({
           ...processExecution,
-          current_step: processExecution.current_step + 1
+          current_step: processExecution.current_step + 1,
         });
       }
     } catch (err) {
@@ -95,41 +114,34 @@ const ProcessPage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   const handleReportError = async (errorDescription: string) => {
     if (!processExecution || !process) return;
-    
-    const currentStep = process.steps.find(
-      step => step.order === processExecution.current_step
-    );
-    
+
+    const currentStep = process.steps.find((step) => step.order === processExecution.current_step);
     if (!currentStep) return;
-    
+
     try {
       setLoading(true);
-      // Report error for the current step
+
       await api.post(`/api/processes/execution/${processId}/report-error`, {
         step_id: currentStep.id,
-        error_description: errorDescription
+        error_description: errorDescription,
       });
-      
-      // Update local state
-      const updatedStepExecutions = stepExecutions.map(se => 
-        se.step_id === currentStep.id 
-          ? { 
-              ...se, 
-              status: 'error', 
-              error_description: errorDescription 
-            } 
-          : se
+
+      // Marca el step en error y guarda la descripción
+      setStepExecutions((prev) =>
+        prev.map((se) =>
+          se.step_id === currentStep.id
+            ? { ...se, status: 'error', error_description: errorDescription }
+            : se
+        )
       );
-      
-      setStepExecutions(updatedStepExecutions);
-      
-      // Update process execution status
+
+      // Marca la ejecución en error
       setProcessExecution({
         ...processExecution,
-        status: 'error'
+        status: 'error',
       });
     } catch (err) {
       console.error('Error reporting problem:', err);
@@ -138,43 +150,39 @@ const ProcessPage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   const handleFinishProcess = () => {
     navigate('/dashboard');
   };
-  
+
   if (loading) {
     return <LoadingScreen message="Cargando proceso..." />;
   }
-  
+
   if (error) {
     return (
       <div className="text-center py-8">
         <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
         <p className="text-gray-600 mb-6">{error}</p>
-        <Button onClick={() => navigate('/dashboard')}>
-          Volver al dashboard
-        </Button>
+        <Button onClick={() => navigate('/dashboard')}>Volver al dashboard</Button>
       </div>
     );
   }
-  
+
   if (!processExecution || !process) {
     return (
       <div className="text-center py-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Proceso no encontrado</h2>
         <p className="text-gray-600 mb-6">No se pudo encontrar la información del proceso solicitado.</p>
-        <Button onClick={() => navigate('/dashboard')}>
-          Volver al dashboard
-        </Button>
+        <Button onClick={() => navigate('/dashboard')}>Volver al dashboard</Button>
       </div>
     );
   }
-  
+
   const isProcessComplete = processExecution.status === 'completed';
   const isProcessError = processExecution.status === 'error';
-  
+
   return (
     <div>
       <div className="flex items-center mb-6">
@@ -187,15 +195,15 @@ const ProcessPage: React.FC = () => {
         >
           Volver
         </Button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {process.name}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">{process.name}</h1>
       </div>
-      
+
       {(isProcessComplete || isProcessError) && (
-        <div className={`mb-6 p-4 rounded-md ${
-          isProcessComplete ? 'bg-green-50' : 'bg-red-50'
-        }`}>
+        <div
+          className={`mb-6 p-4 rounded-md ${
+            isProcessComplete ? 'bg-green-50' : 'bg-red-50'
+          }`}
+        >
           <div className="flex items-center">
             {isProcessComplete ? (
               <CheckCircle size={24} className="text-green-500 mr-3" />
@@ -203,23 +211,27 @@ const ProcessPage: React.FC = () => {
               <AlertTriangle size={24} className="text-red-500 mr-3" />
             )}
             <div>
-              <h3 className={`font-semibold ${
-                isProcessComplete ? 'text-green-800' : 'text-red-800'
-              }`}>
+              <h3
+                className={`font-semibold ${
+                  isProcessComplete ? 'text-green-800' : 'text-red-800'
+                }`}
+              >
                 {isProcessComplete ? 'Proceso completado' : 'Proceso con errores'}
               </h3>
-              <p className={`text-sm ${
-                isProcessComplete ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {isProcessComplete 
-                  ? 'Todos los pasos han sido completados correctamente.' 
+              <p
+                className={`text-sm ${
+                  isProcessComplete ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
+                {isProcessComplete
+                  ? 'Todos los pasos han sido completados correctamente.'
                   : 'Se han reportado errores en uno o más pasos del proceso.'}
               </p>
             </div>
           </div>
-          
+
           <div className="mt-4">
-            <Button 
+            <Button
               onClick={handleFinishProcess}
               variant={isProcessComplete ? 'success' : 'primary'}
             >
@@ -228,38 +240,40 @@ const ProcessPage: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Información del despacho</h2>
-          <div className={`px-3 py-1 rounded-full text-sm ${
-            processExecution.status === 'completed' 
-              ? 'bg-green-100 text-green-800' 
-              : processExecution.status === 'error'
+          <div
+            className={`px-3 py-1 rounded-full text-sm ${
+              processExecution.status === 'completed'
+                ? 'bg-green-100 text-green-800'
+                : processExecution.status === 'error'
                 ? 'bg-red-100 text-red-800'
                 : 'bg-blue-100 text-blue-800'
-          }`}>
-            {processExecution.status === 'completed' 
-              ? 'Completado' 
+            }`}
+          >
+            {processExecution.status === 'completed'
+              ? 'Completado'
               : processExecution.status === 'error'
-                ? 'Error'
-                : 'En progreso'}
+              ? 'Error'
+              : 'En progreso'}
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">ID del despacho</p>
             <p className="font-medium">{processExecution.shipment_id}</p>
           </div>
-          
+
           <div>
             <p className="text-sm text-gray-500">Iniciado el</p>
             <p className="font-medium">
               {new Date(processExecution.started_at).toLocaleString()}
             </p>
           </div>
-          
+
           {processExecution.completed_at && (
             <div>
               <p className="text-sm text-gray-500">Completado el</p>
@@ -270,16 +284,17 @@ const ProcessPage: React.FC = () => {
           )}
         </div>
       </div>
-      
+
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-4">Pasos del proceso</h2>
-        
+
         <div className="space-y-4">
           {process.steps.map((step) => {
-            const stepExecution = stepExecutions.find(se => se.step_id === step.id);
-            const isActive = processExecution.current_step === step.order && 
-                            processExecution.status === 'in_progress';
-            
+            const stepExecution = stepExecutions.find((se) => se.step_id === step.id);
+            const isActive =
+              processExecution.current_step === step.order &&
+              processExecution.status === 'in_progress';
+
             return (
               <ProcessStepCard
                 key={step.id}

@@ -15,6 +15,16 @@ export interface Session {
   active: boolean;
 }
 
+export interface ShipmentItem {
+  id: string;
+  shipment_id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  weight: number;
+  description: string;
+}
+
 export interface Shipment {
   id: string;
   tracking_code: string;
@@ -27,14 +37,14 @@ export interface Shipment {
   created_at: string;
 }
 
-export interface ShipmentItem {
+export interface ProcessStep {
   id: string;
-  shipment_id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  weight: number;
+  process_id: string;
+  order: number;
+  title: string;
   description: string;
+  image_url?: string;
+  is_critical: boolean;
 }
 
 export interface Process {
@@ -45,16 +55,6 @@ export interface Process {
   steps: ProcessStep[];
   created_at: string;
   updated_at: string;
-}
-
-export interface ProcessStep {
-  id: string;
-  process_id: string;
-  order: number;
-  title: string;
-  description: string;
-  image_url?: string;
-  is_critical: boolean;
 }
 
 export interface ProcessExecution {
@@ -70,6 +70,11 @@ export interface ProcessExecution {
   notes: string | null;
 }
 
+/**
+ * 🔴 Deja UNA sola declaración de ProcessStepExecution.
+ * Mantén 'error_description' como 'string | null' (opcional no es necesario),
+ * y usa el union de status del front.
+ */
 export interface ProcessStepExecution {
   id: string;
   process_execution_id: string;

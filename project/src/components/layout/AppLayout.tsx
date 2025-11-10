@@ -1,23 +1,11 @@
+// src/components/layout/AppLayout.tsx
 import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import LoadingScreen from '../ui/LoadingScreen';
 
 const AppLayout: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
-
-  // Show loading screen while checking authentication
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
+  // ❌ Nada de useAuth aquí. Solo UI.
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />

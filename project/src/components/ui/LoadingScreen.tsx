@@ -4,9 +4,7 @@ interface LoadingScreenProps {
   message?: string;
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
-  message = 'Cargando...' 
-}) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = 'Cargando...' }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-50">
       <div className="text-center">

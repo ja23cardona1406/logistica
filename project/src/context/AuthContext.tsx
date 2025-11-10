@@ -1,10 +1,10 @@
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
-import { User } from '../types';
 import { supabase } from '../lib/supabase';
+import type { User as AppUser } from '../types';
 
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
+  user: AppUser | null;
+  loading: boolean;       // true SOLO hasta que hidratamos la sesión inicial
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
@@ -15,253 +15,127 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
-  
-  // Referencias para controlar llamadas simultáneas
-  const authCheckInProgress = useRef(false);
-  const refreshInProgress = useRef(false);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [ready, setReady] = useState(false); // <- bandera de “ya hidraté la sesión inicial”
   const mountedRef = useRef(true);
 
-  // Función para obtener el perfil del usuario - simplificada
-  const fetchUserProfile = useCallback(async (userId: string, email: string): Promise<User> => {
+  const minimalFromSession = (id: string, email: string | null | undefined): AppUser => ({
+    id,
+    email: email ?? '',
+    role: 'operator',
+    first_name: '',
+    last_name: '',
+    created_at: new Date().toISOString(),
+  });
+
+  const fetchUserProfile = useCallback(async (userId: string, email: string | null | undefined): Promise<AppUser> => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error || !profile) {
-        // Retornar usuario básico si no hay perfil
-        return {
-          id: userId,
-          email: email,
-          role: 'operator' as const,
-          first_name: '',
-          last_name: '',
-          created_at: new Date().toISOString(),
-        };
-      }
-
-      return profile as User;
-    } catch (error) {
-      console.error('Profile fetch error:', error);
-      return {
-        id: userId,
-        email: email,
-        role: 'operator' as const,
-        first_name: '',
-        last_name: '',
-        created_at: new Date().toISOString(),
-      };
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (error || !data) return minimalFromSession(userId, email);
+      return data as AppUser;
+    } catch {
+      return minimalFromSession(userId, email);
     }
   }, []);
 
-  // Función para verificar sesión - con control de concurrencia
-  const checkSession = useCallback(async () => {
-    // Evitar múltiples verificaciones simultáneas
-    if (authCheckInProgress.current || !mountedRef.current) {
-      return;
-    }
-
-    authCheckInProgress.current = true;
-
+  // Hidratar sesión inicial
+  const hydrateInitialSession = useCallback(async () => {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Session error:', error);
-        if (mountedRef.current) {
-          setUser(null);
-        }
-        return;
-      }
+      const { data, error } = await supabase.auth.getSession();
+      if (error) console.error('[Auth] getSession error:', error);
+      const session = data?.session;
 
-      if (session?.user && mountedRef.current) {
-        const profile = await fetchUserProfile(session.user.id, session.user.email ?? '');
-        if (mountedRef.current) {
-          setUser(profile);
-        }
-      } else if (mountedRef.current) {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-      if (mountedRef.current) {
-        setUser(null);
+      if (session?.user) {
+        // 1) HIDRATAR INMEDIATO -> evita user=null y redirección
+        const immediate = minimalFromSession(session.user.id, session.user.email);
+        if (mountedRef.current) setUser(immediate);
+
+        // 2) PERFIL EN SEGUNDO PLANO
+        fetchUserProfile(session.user.id, session.user.email).then((p) => {
+          if (mountedRef.current) setUser(p);
+        });
+      } else {
+        if (mountedRef.current) setUser(null);
       }
     } finally {
-      authCheckInProgress.current = false;
-      if (mountedRef.current) {
-        setLoading(false);
-      }
+      if (mountedRef.current) setReady(true);
     }
   }, [fetchUserProfile]);
 
-  // Función para refrescar autenticación - con debounce
-  const refreshAuth = useCallback(async () => {
-    if (refreshInProgress.current || !mountedRef.current) {
-      return;
-    }
-
-    refreshInProgress.current = true;
-
-    try {
-      await checkSession();
-    } finally {
-      refreshInProgress.current = false;
-    }
-  }, [checkSession]);
-
-  // Inicialización - solo una vez
   useEffect(() => {
-    let mounted = true;
     mountedRef.current = true;
+    hydrateInitialSession();
 
-    const initializeAuth = async () => {
-      if (!mounted) return;
-      
-      setLoading(true);
-      await checkSession();
-      
-      if (mounted) {
-        setInitialized(true);
+    // Listener para cambios posteriores
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // IMPORTANTE: este listener no decide el "ready"; solo reacciona a cambios.
+      if (!mountedRef.current) return;
+      console.log('[Auth] onAuthStateChange event=', event, ' session?', !!session);
+
+      if (session?.user) {
+        // Set inmediato + perfil en segundo plano
+        const immediate = minimalFromSession(session.user.id, session.user.email);
+        setUser(immediate);
+        fetchUserProfile(session.user.id, session.user.email).then((p) => {
+          if (mountedRef.current) setUser(p);
+        });
+      } else {
+        setUser(null);
       }
-    };
-
-    initializeAuth();
+    });
 
     return () => {
-      mounted = false;
       mountedRef.current = false;
-    };
-  }, []); // Sin dependencias para ejecutar solo una vez
-
-  // Configurar listeners después de inicialización
-  useEffect(() => {
-    if (!initialized) return;
-
-    // Listener para cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mountedRef.current) return;
-
-        console.log('Auth state changed:', event);
-
-        // Solo manejar eventos importantes
-        if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchUserProfile(session.user.id, session.user.email ?? '');
-          if (mountedRef.current) {
-            setUser(profile);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          if (mountedRef.current) {
-            setUser(null);
-          }
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          // No necesitamos volver a fetch el perfil en token refresh
-          // Solo actualizamos si no tenemos usuario
-          if (!user && mountedRef.current) {
-            const profile = await fetchUserProfile(session.user.id, session.user.email ?? '');
-            if (mountedRef.current) {
-              setUser(profile);
-            }
-          }
-        }
-      }
-    );
-
-    // Listener para visibilidad de página - con debounce
-    let visibilityTimeout: NodeJS.Timeout;
-    const handleVisibilityChange = () => {
-      if (!document.hidden && mountedRef.current) {
-        // Debounce para evitar múltiples llamadas
-        clearTimeout(visibilityTimeout);
-        visibilityTimeout = setTimeout(() => {
-          if (mountedRef.current) {
-            refreshAuth();
-          }
-        }, 1000);
-      }
-    };
-
-    // Listener para foco de ventana - con debounce
-    let focusTimeout: NodeJS.Timeout;
-    const handleWindowFocus = () => {
-      if (mountedRef.current) {
-        clearTimeout(focusTimeout);
-        focusTimeout = setTimeout(() => {
-          if (mountedRef.current) {
-            refreshAuth();
-          }
-        }, 1000);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
-
-    return () => {
       subscription.unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
-      clearTimeout(visibilityTimeout);
-      clearTimeout(focusTimeout);
     };
-  }, [initialized, fetchUserProfile, refreshAuth, user]);
+  }, [hydrateInitialSession, fetchUserProfile]);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) throw new Error(error.message);
 
-      if (error) {
-        throw new Error(error.message);
-      }
+    const sessionUser = data.session?.user;
+    if (!sessionUser) throw new Error('No se pudo crear la sesión.');
 
-      // No necesitamos hacer nada aquí, onAuthStateChange manejará la actualización
-    } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
+    // igual: hidratación inmediata + perfil async
+    const immediate = minimalFromSession(sessionUser.id, sessionUser.email);
+    if (mountedRef.current) setUser(immediate);
+    fetchUserProfile(sessionUser.id, sessionUser.email).then((p) => {
+      if (mountedRef.current) setUser(p);
+    });
   };
 
   const signOut = async () => {
-    try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      // onAuthStateChange manejará la limpieza del estado
-    } catch (error) {
-      console.error('Error signing out:', error);
-    } finally {
-      setLoading(false);
-    }
+    await supabase.auth.signOut();
+    if (mountedRef.current) setUser(null);
   };
 
-  const value = {
-    user,
-    loading,
-    signIn,
-    signOut,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    refreshAuth,
-  };
+  const refreshAuth = async () => hydrateInitialSession();
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const loading = !ready; // loading solo depende de hidratación inicial
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signOut,
+        isAuthenticated: !!user,
+        isAdmin: user?.role === 'admin',
+        refreshAuth,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 };

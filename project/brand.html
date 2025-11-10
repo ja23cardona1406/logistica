@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cronograma – Proyecto de Grado (2025)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    :root{
+      --bg:#f7f7fb; --card:#ffffff; --ink:#0f172a; --ink-soft:#6b7280;
+      --primary:#2563eb; --primary-dark:#1d4ed8;
+      --accent:#16a34a; --accent-dark:#15803d;
+      --warning:#b45309; --warning-weak:#fff2d9;
+      --grid:#e9edf3; --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; padding:28px; background:var(--bg); color:var(--ink);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height:1.45;}
+    .wrap{max-width:1100px; margin:auto}
+    h1{font-size: clamp(20px, 3vw, 28px); margin:0 0 18px; font-weight:600; display:flex; align-items:center; gap:10px}
+    h1::before{content:""; width:8px; height:28px; border-radius:999px; background:linear-gradient(180deg, var(--primary), var(--accent));}
+    h3{margin:0 0 10px}
+    .card{background:var(--card); border-radius:var(--radius); padding:18px 20px; margin-bottom:18px; border:1px solid var(--grid); box-shadow:0 6px 14px rgba(0,0,0,.05);}
+    .grid-2{display:grid; grid-template-columns:2fr 1fr; gap:18px;}
+    @media(max-width:960px){.grid-2{grid-template-columns:1fr}}
+
+    .pill{display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--ink); padding:6px 10px; border-radius:999px; border:1px solid var(--grid); background:var(--card);}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .blue{background:var(--primary)} .green{background:var(--accent)}
+
+    .timeline-wrap{position:relative; border:1px solid var(--grid); border-radius:12px; overflow:hidden; background:#fff}
+    #timeline{height:420px}
+    .milestone{position:absolute; top:0; bottom:0; width:0; border-right:2px dashed var(--warning);}
+    .milestone::after{
+      content:"Hito: Inicio del piloto (Jun 2025)"; position:absolute; top:10px; right:6px; transform:translateX(100%);
+      font-size:12px; color:var(--warning); background:var(--warning-weak);
+      padding:4px 8px; border-radius:8px; border:1px solid #fde68a; white-space:nowrap;
+    }
+
+    /* Tabla Detalle */
+    .table-wrap{overflow:auto; border:1px solid var(--grid); border-radius:12px}
+    table{width:100%; border-collapse:separate; border-spacing:0; background:#fff}
+    thead th{position:sticky; top:0; background:#f8fafc; color:#0f172a; text-align:left; font-weight:600; font-size:14px; border-bottom:1px solid var(--grid); padding:10px 12px}
+    tbody td{padding:10px 12px; border-bottom:1px solid var(--grid); font-size:14px; color:#111827}
+    tbody tr:hover{background:#f9fbff}
+    .actions{display:flex; gap:8px; align-items:center}
+    .btn{border:1px solid var(--grid); background:#fff; padding:6px 10px; border-radius:10px; cursor:pointer}
+    .btn:hover{border-color:#cdd6e4}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cronograma – Proyecto de Grado (2025)</h1>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Resumen</h3>
+      <p class="hint">
+        Ejecución del <b>2025/02/01</b> al <b>2025/07/31</b>: análisis, diseño, desarrollo, pruebas, seguridad, piloto y entrega final.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Metadatos</h3>
+      <ul style="list-style:none;padding:0;margin:0">
+        <li><b>Ámbito:</b> Proyecto de grado individual</li>
+        <li><b>Épicas:</b> 7</li>
+        <li><b>Actividades:</b> 19</li>
+        <li><b>Horizonte:</b> Feb–Jul 2025</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div>
+        <span class="pill"><span class="dot blue"></span> Épicas</span>
+        <span class="pill"><span class="dot green"></span> Actividades</span>
+      </div>
+      <div class="actions">
+        <button id="zoomOut" class="btn">–</button>
+        <button id="zoomIn" class="btn">+</button>
+      </div>
+    </div>
+
+    <div class="timeline-wrap">
+      <div id="timeline"></div>
+      <div id="milestone-oct" class="milestone"></div>
+    </div>
+    <div style="font-size:13px;color:#6b7280;margin-top:8px">Escala: febrero → julio 2025</div>
+  </div>
+
+  <!-- ========= Detalle de actividades (nuevo apartado) ========= -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h3 style="margin:0">Detalle de actividades</h3>
+      <div class="actions">
+        <button id="exportCsv" class="btn">Exportar CSV (Jira)</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tabla-tareas">
+        <thead>
+          <tr>
+            <th>Épica</th>
+            <th>Actividad</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Duración (días)</th>
+          </tr>
+        </thead>
+        <tbody><!-- filas generadas por JS --></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // === Épicas (rango por meses) ===
+  const fases = [
+    {epica:'E1 Análisis inicial', ini:'2025-02-01', fin:'2025-03-31'},
+    {epica:'E2 Diseño de interfaz y experiencia', ini:'2025-03-01', fin:'2025-04-30'},
+    {epica:'E3 Desarrollo del sistema', ini:'2025-03-01', fin:'2025-05-31'},
+    {epica:'E4 Pruebas y validación de módulos', ini:'2025-04-01', fin:'2025-06-30'},
+    {epica:'E5 Seguridad y comunicación', ini:'2025-05-01', fin:'2025-06-30'},
+    {epica:'E6 Piloto y evaluación final', ini:'2025-06-01', fin:'2025-07-15'},
+    {epica:'E7 Documentación y presentación final', ini:'2025-07-01', fin:'2025-07-31'}
+  ];
+
+  // === Actividades (basadas en tu proyecto de Feb–Jul) ===
+  const tareas = [
+    // E1
+    {epica:'E1 Análisis inicial', tarea:'Inicio del proyecto y plan de trabajo', ini:'2025-02-01', fin:'2025-02-15'},
+    {epica:'E1 Análisis inicial', tarea:'Definir tipos de síntomas y eventos críticos', ini:'2025-02-16', fin:'2025-03-05'},
+    {epica:'E1 Análisis inicial', tarea:'Requisitos del módulo de recordatorio', ini:'2025-03-06', fin:'2025-03-31'},
+    // E2
+    {epica:'E2 Diseño de interfaz y experiencia', tarea:'Prototipo de interfaz para registro de síntomas', ini:'2025-03-01', fin:'2025-03-20'},
+    {epica:'E2 Diseño de interfaz y experiencia', tarea:'Interfaz de configuración de recordatorios', ini:'2025-03-21', fin:'2025-04-10'},
+    {epica:'E2 Diseño de interfaz y experiencia', tarea:'Protocolo de prueba piloto', ini:'2025-04-11', fin:'2025-04-30'},
+    // E3
+    {epica:'E3 Desarrollo del sistema', tarea:'Algoritmos para detección de cambios en síntomas', ini:'2025-03-10', fin:'2025-04-05'},
+    {epica:'E3 Desarrollo del sistema', tarea:'Notificaciones y seguimiento de cumplimiento', ini:'2025-04-06', fin:'2025-04-25'},
+    {epica:'E3 Desarrollo del sistema', tarea:'Módulo de mensajería/videollamadas', ini:'2025-04-26', fin:'2025-05-20'},
+    {epica:'E3 Desarrollo del sistema', tarea:'Integración de notificaciones a profesionales', ini:'2025-05-21', fin:'2025-05-31'},
+    // E4
+    {epica:'E4 Pruebas y validación de módulos', tarea:'Usabilidad del módulo de seguimiento', ini:'2025-04-15', fin:'2025-05-05'},
+    {epica:'E4 Pruebas y validación de módulos', tarea:'Pruebas en dispositivos del módulo de recordatorios', ini:'2025-05-06', fin:'2025-05-25'},
+    {epica:'E4 Pruebas y validación de módulos', tarea:'Rendimiento y optimización de comunicación', ini:'2025-05-26', fin:'2025-06-15'},
+    // E5
+    {epica:'E5 Seguridad y comunicación', tarea:'Requisitos de seguridad y privacidad', ini:'2025-05-15', fin:'2025-06-10'},
+    // E6
+    {epica:'E6 Piloto y evaluación final', tarea:'Definir métricas del piloto', ini:'2025-06-01', fin:'2025-06-10'},
+    {epica:'E6 Piloto y evaluación final', tarea:'Prueba piloto con cuidadores y médicos', ini:'2025-06-11', fin:'2025-07-05'},
+    {epica:'E6 Piloto y evaluación final', tarea:'Análisis de resultados y ajustes', ini:'2025-07-06', fin:'2025-07-15'},
+    // E7
+    {epica:'E7 Documentación y presentación final', tarea:'Redacción del informe final', ini:'2025-07-10', fin:'2025-07-25'},
+    {epica:'E7 Documentación y presentación final', tarea:'Preparar y presentar resultados', ini:'2025-07-26', fin:'2025-07-31'}
+  ];
+
+  const toDate = s => {const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+  const fmt = d => d.toISOString().slice(0,10);
+  const daysInclusive = (a,b) => Math.round((toDate(b)-toDate(a))/(1000*60*60*24))+1;
+
+  // ---- Google Timeline ----
+  google.charts.load('current', {'packages':['timeline']});
+  google.charts.setOnLoadCallback(drawTimeline);
+
+  // Rango de la escala (hAxis)
+  let hAxisMin = new Date(2025,1,1);   // 1 Feb 2025
+  let hAxisMax = new Date(2025,6,31);  // 31 Jul 2025
+
+  function drawTimeline(){
+    const primary = "#2563eb";
+    const accent = "#16a34a";
+
+    const container = document.getElementById('timeline');
+    const chart = new google.visualization.Timeline(container);
+    const dt = new google.visualization.DataTable();
+    dt.addColumn({type:'string',id:'Epica'});
+    dt.addColumn({type:'string',id:'Tarea'});
+    dt.addColumn({type:'string',role:'style'});
+    dt.addColumn({type:'date',id:'Inicio'});
+    dt.addColumn({type:'date',id:'Fin'});
+
+    for(const f of fases)
+      dt.addRow([f.epica,'Épica',`color:${primary};stroke-color:#1d4ed8;stroke-width:1`,toDate(f.ini),toDate(f.fin)]);
+    for(const t of tareas)
+      dt.addRow([t.epica,t.tarea,`color:${accent};stroke-color:#15803d;stroke-width:1`,toDate(t.ini),toDate(t.fin)]);
+
+    const options={
+      timeline:{groupByRowLabel:true,barLabelStyle:{fontSize:12,color:'#1f2937'},rowLabelStyle:{fontSize:12,color:'#1f2937'}},
+      backgroundColor:'#fff',height:420,
+      hAxis:{minValue:hAxisMin,maxValue:hAxisMax}
+    };
+    chart.draw(dt,options);
+
+    prettifyBars(container);
+
+    // Hito en mitad de junio 2025
+    const milestone=document.getElementById('milestone-oct');
+    const anchor = new Date(2025,5,15); // 15 Jun 2025
+    const pct=(anchor - hAxisMin)/(hAxisMax - hAxisMin);
+    milestone.style.left=(pct*container.clientWidth)+'px';
+  }
+
+  function prettifyBars(container){
+    const svg=container.querySelector('svg');
+    if(!svg) return;
+    svg.querySelectorAll('rect').forEach(r=>{
+      const h=parseFloat(r.getAttribute('height'));
+      if(h>12&&h<40){
+        r.setAttribute('rx','6');
+        r.setAttribute('ry','6');
+        r.style.filter='drop-shadow(0 1px 1px rgba(0,0,0,.25))';
+      }
+    });
+  }
+
+  // ---- Tabla Detalle de actividades ----
+  function renderTable(){
+    const tbody = document.querySelector('#tabla-tareas tbody');
+    tbody.innerHTML = '';
+
+    // orden por épica y luego por inicio
+    const order = (a,b) => {
+      const na = a.epica.slice(1,2), nb = b.epica.slice(1,2); // E1,E2...
+      if(na !== nb) return na - nb;
+      return toDate(a.ini) - toDate(b.ini);
+    };
+
+    [...tareas].sort(order).forEach(t=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${t.epica}</td>
+        <td>${t.tarea}</td>
+        <td>${fmt(toDate(t.ini))}</td>
+        <td>${fmt(toDate(t.fin))}</td>
+        <td>${daysInclusive(t.ini,t.fin)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---- Export CSV para Jira ----
+  function exportCsv(){
+    const header = ['Épica','Actividad','Inicio','Fin','Duración (días)'];
+    const rows = [header.join(',')];
+    const ordered = [...tareas].sort((a,b)=>toDate(a.ini)-toDate(b.ini));
+    ordered.forEach(t=>{
+      rows.push([
+        `"${t.epica}"`,
+        `"${t.tarea.replace(/"/g,'""')}"`,
+        fmt(toDate(t.ini)),
+        fmt(toDate(t.fin)),
+        daysInclusive(t.ini,t.fin)
+      ].join(','));
+    });
+    const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'detalle-actividades-jira.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('exportCsv').onclick = exportCsv;
+
+  // Zoom
+  document.getElementById('zoomIn').onclick=()=>{
+    hAxisMin=new Date(2025,2,1); // 1 Mar
+    hAxisMax=new Date(2025,5,30); // 30 Jun
+    drawTimeline()
+  };
+  document.getElementById('zoomOut').onclick=()=>{
+    hAxisMin=new Date(2025,1,1); // 1 Feb
+    hAxisMax=new Date(2025,6,31); // 31 Jul
+    drawTimeline()
+  };
+
+  // Inicializar
+  window.addEventListener('resize',()=>drawTimeline());
+  renderTable();
+</script>
+</body>
+</html>

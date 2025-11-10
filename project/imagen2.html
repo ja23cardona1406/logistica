@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agrosoft CM – Arquitectura (organizada + relaciones)</title>
+  <style>
+    :root{
+      --bg:#ffffff; --fg:#0f172a; --muted:#475569; --border:#e2e8f0; --grid:rgba(2,6,23,.06);
+      --card:#f8fafc; --shadow:0 8px 22px rgba(2,6,23,.08);
+      --edge:#64748b; --edge-strong:#0ea5e9; --edge-ml:#f59e0b; --edge-dash:#94a3b8;
+      --label-bg:rgba(248,250,252,.9);
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1220; --fg:#e2e8f0; --muted:#94a3b8; --border:#1f2937; --card:#0f172a;
+        --grid:rgba(226,232,240,.08); --label-bg:rgba(15,23,42,.9);
+      }
+    }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .wrap{max-width:1480px;margin:36px auto;padding:20px}
+    h1{font-size:clamp(22px,3vw,30px);margin:0 0 6px}
+    .subtitle{color:var(--muted);margin:0 0 16px}
+    .board{position:relative;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:8px}
+    .svg{width:100%;height:auto;display:block}
+
+    .node{fill:#fff;stroke:var(--border);stroke-width:2;rx:12;filter:url(#softShadow)}
+    .title{font:700 13px/1 Inter,ui-sans-serif;fill:var(--fg);letter-spacing:.2px}
+    .small{font:400 11px/1.35 Inter,ui-sans-serif;fill:var(--muted)}
+    .emoji rect{filter:url(#softShadow)}
+
+    /* Aristas */
+    .edge{fill:none;stroke:var(--edge);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .edge.strong{stroke:var(--edge-strong)}
+    .edge.ml{stroke:var(--edge-ml)}
+    .edge.dash{stroke:var(--edge-dash);stroke-dasharray:6 6}
+
+    .label{font:600 10px/1 Inter,ui-sans-serif; fill:var(--fg)}
+    .label-bg{fill:var(--label-bg);stroke:var(--border);stroke-width:1;rx:4}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Arquitectura de Software – Agrosoft CM</h1>
+  <p class="subtitle">Supabase (BaaS + RLS) • Backend FastAPI (RESTful + JWT) con ML (Scikit-learn, TensorFlow) y entrenamiento continuo • Frontend React 18 + TS + Redux + Tailwind • Reportes PDF • Evolución: móvil y blockchain.</p>
+
+  <div class="board">
+    <svg class="svg" viewBox="0 0 1600 950" role="img" aria-label="Diagrama de software Agrosoft CM con relaciones organizadas">
+      <defs>
+        <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+          <path d="M24 0H0V24" fill="none" stroke="currentColor" stroke-opacity=".06"/>
+        </pattern>
+        <filter id="softShadow" x="-15%" y="-20%" width="140%" height="160%">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-opacity=".12"/>
+        </filter>
+
+        <!-- Flechas -->
+        <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="currentColor" />
+        </marker>
+
+        <!-- Íconos -->
+        <symbol id="ico-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8.5" ry="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 6v8c0 1.9 3.8 3.5 8.5 3.5S20.5 15.9 20.5 14V6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="ico-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 118 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="ico-python" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="4" y="13" width="16" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="ico-ml" viewBox="0 0 24 24"><path d="M4 18l6-12 4 8 2-4 4 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="ico-api" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="ico-jwt" viewBox="0 0 24 24"><path d="M12 3v7l6-3.5-6 10V21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 10L6 6.5l6 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="ico-react" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.8" fill="currentColor"/><ellipse cx="12" cy="12" rx="9" ry="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="4.5" ry="9" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="ico-chart" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 16l3-4 3 3 4-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+        <symbol id="ico-pdf" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="ico-mobile" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+        <symbol id="ico-chain" viewBox="0 0 24 24"><path d="M7 7h4a4 4 0 010 8H7M17 7h-4a4 4 0 000 8h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+
+        <!-- Gradientes badges -->
+        <linearGradient id="g-db"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient>
+        <linearGradient id="g-sec"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+        <linearGradient id="g-py"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#10b981"/></linearGradient>
+        <linearGradient id="g-ml"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#f97316"/></linearGradient>
+        <linearGradient id="g-api"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient>
+        <linearGradient id="g-auth"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+        <linearGradient id="g-ui"><stop offset="0" stop-color="#06b6d4"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+        <linearGradient id="g-fut"><stop offset="0" stop-color="#ef4444"/><stop offset="1" stop-color="#f43f5e"/></linearGradient>
+      </defs>
+
+      <!-- FONDO -->
+      <rect x="0" y="0" width="1600" height="950" fill="url(#grid)"/>
+
+      <!-- ========== CAPA DE ARISTAS (debajo de nodos) ========== -->
+      <g id="edges" marker-end="url(#arrow)">
+        <!-- Constantes de referencia (comentarios):
+             SUPABASE: x=80,y=80,w=470,h=130  -> right-center (550,145)
+             BACKEND : x=560,y=220,w=620,h=200 -> left-center (560,320) / right-center (1180,320) / bottom-center (870,420)
+             MODELOS : x=1220,y=260,w=330,h=120 -> left-center (1220,320) / bottom-center (1385,380)
+             FRONTEND: x=80,y=520,w=470,h=150  -> right-center (550,595) / bottom-center (315,670)
+             REPORTES: x=420,y=760,w=260,h=95  -> top-center (550,760) / left-center (420,807.5)
+             FUTURO  : x=1120,y=520,w=440,h=130 -> left-center (1120,585)
+        -->
+
+        <!-- Supabase → Backend (RLS + SQL) -->
+        <path class="edge strong" d="M550 145 H580 V320 H560" />
+
+        <!-- Frontend → Backend (REST + JWT) -->
+        <path class="edge strong" d="M550 595 H640 V320 H560" />
+
+        <!-- Backend → Modelos (Inferencia) -->
+        <path class="edge ml" d="M1180 320 H1220" />
+
+        <!-- Backend → Reportes (PDF) -->
+        <path class="edge" d="M870 420 V700 H550 V760" />
+
+        <!-- Frontend → Reportes (Descarga) -->
+        <path class="edge" d="M315 670 V730 H550 V760" />
+
+        <!-- (Roadmap) Modelos → Futuro -->
+        <path class="edge dash" d="M1385 380 V585 H1120" />
+        <!-- (Roadmap) Frontend → Futuro -->
+        <path class="edge dash" d="M550 595 H1120 V585" />
+      </g>
+
+      <!-- ========== NODOS ========== -->
+
+      <!-- SUPABASE -->
+      <g transform="translate(80,80)">
+        <rect class="node" width="470" height="130" rx="12"/>
+        <text class="title" x="16" y="26">Supabase (BaaS • Relacional)</text>
+        <text class="small" x="16" y="48">Registros de ordeño • Nutrición • Datos zootécnicos • Factores productivos</text>
+        <text class="small" x="16" y="70">RLS (Row Level Security): acceso granular por usuario</text>
+        <g class="emoji">
+          <rect x="404" y="16" width="48" height="48" rx="12" fill="url(#g-db)"/>
+          <use href="#ico-db" x="408" y="20" width="40" height="40" style="color:#fff"/>
+        </g>
+        <g class="emoji">
+          <rect x="404" y="74" width="48" height="48" rx="12" fill="url(#g-sec)"/>
+          <use href="#ico-lock" x="408" y="78" width="40" height="40" style="color:#fff"/>
+        </g>
+      </g>
+
+      <!-- BACKEND -->
+      <g transform="translate(560,220)">
+        <rect class="node" width="620" height="200" rx="12"/>
+        <text class="title" x="16" y="28">Backend FastAPI (RESTful)</text>
+        <text class="small" x="16" y="52">Python • Servicios • Integración con Supabase</text>
+        <text class="small" x="16" y="74">ML: Scikit-learn • TensorFlow</text>
+        <text class="small" x="16" y="96">Autenticación JWT • Versionado de endpoints</text>
+        <g class="emoji">
+          <rect x="544" y="22" width="48" height="48" rx="12" fill="url(#g-py)"/>
+          <use href="#ico-python" x="548" y="26" width="40" height="40" style="color:#fff"/>
+        </g>
+        <g class="emoji">
+          <rect x="544" y="82" width="48" height="48" rx="12" fill="url(#g-api)"/>
+          <use href="#ico-api" x="548" y="86" width="40" height="40" style="color:#fff"/>
+        </g>
+        <g class="emoji">
+          <rect x="544" y="142" width="48" height="48" rx="12" fill="url(#g-auth)"/>
+          <use href="#ico-jwt" x="548" y="146" width="40" height="40" style="color:#fff"/>
+        </g>
+      </g>
+
+      <!-- MODELOS -->
+      <g transform="translate(1220,260)">
+        <rect class="node" width="330" height="120" rx="12"/>
+        <text class="title" x="16" y="28">Modelos y Entrenamiento</text>
+        <text class="small" x="16" y="50">Regresión Lineal • Árboles • Random Forest • LSTM</text>
+        <text class="small" x="16" y="72">Entrenamiento continuo con nuevos datos</text>
+        <g class="emoji">
+          <rect x="266" y="20" width="48" height="48" rx="12" fill="url(#g-ml)"/>
+          <use href="#ico-ml" x="270" y="24" width="40" height="40" style="color:#fff"/>
+        </g>
+      </g>
+
+      <!-- FRONTEND -->
+      <g transform="translate(80,520)">
+        <rect class="node" width="470" height="150" rx="12"/>
+        <text class="title" x="16" y="28">Frontend: React 18 + TypeScript</text>
+        <text class="small" x="16" y="50">Redux Toolkit • Tailwind CSS • Recharts • Lucide</text>
+        <text class="small" x="16" y="72">Registro de vacas • Predicciones • Comparaciones</text>
+        <text class="small" x="16" y="94">Reportes PDF • UX simple e intuitiva</text>
+        <g class="emoji">
+          <rect x="404" y="20" width="48" height="48" rx="12" fill="url(#g-ui)"/>
+          <use href="#ico-react" x="408" y="24" width="40" height="40" style="color:#fff"/>
+        </g>
+        <g class="emoji">
+          <rect x="404" y="82" width="48" height="48" rx="12" fill="url(#g-ui)"/>
+          <use href="#ico-chart" x="408" y="86" width="40" height="40" style="color:#fff"/>
+        </g>
+      </g>
+
+      <!-- REPORTES -->
+      <g transform="translate(420,760)">
+        <rect class="node" width="260" height="95" rx="12"/>
+        <text class="title" x="16" y="28">Reportes</text>
+        <text class="small" x="16" y="50">Exportación PDF automatizada</text>
+        <g class="emoji">
+          <rect x="202" y="22" width="48" height="48" rx="12" fill="url(#g-ui)"/>
+          <use href="#ico-pdf" x="206" y="26" width="40" height="40" style="color:#fff"/>
+        </g>
+      </g>
+
+      <!-- FUTURO -->
+      <g transform="translate(1120,520)">
+        <rect class="node" width="440" height="130" rx="12"/>
+        <text class="title" x="16" y="28">Evolución / Futuro</text>
+        <text class="small" x="16" y="50">App móvil • Blockchain (trazabilidad)</text>
+        <text class="small" x="16" y="72">Análisis genético del hato</text>
+        <g class="emoji">
+          <rect x="376" y="18" width="48" height="48" rx="12" fill="url(#g-fut)"/>
+          <use href="#ico-mobile" x="380" y="22" width="40" height="40" style="color:#fff"/>
+        </g>
+        <g class="emoji">
+          <rect x="376" y="76" width="48" height="48" rx="12" fill="url(#g-fut)"/>
+          <use href="#ico-chain" x="380" y="80" width="40" height="40" style="color:#fff"/>
+        </g>
+      </g>
+
+      <!-- MARCO -->
+      <rect x="0" y="0" width="1600" height="950" fill="none" stroke="rgba(2,6,23,.04)" rx="16"/>
+    </svg>
+  </div>
+</div>
+</body>
+</html>

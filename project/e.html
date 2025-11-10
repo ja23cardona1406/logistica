@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cronograma de Proyecto de Grado – Prototipo individual (2025)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    /* ======= Theme ======= */
+    :root{
+      --bg:#f7f7fb; --card:#ffffff; --ink:#0f172a; --ink-soft:#6b7280;
+      --primary:#2563eb; --primary-weak:#e8efff;
+      --accent:#16a34a; --accent-weak:#e8f7ee;
+      --warning:#b45309; --warning-weak:#fff2d9;
+      --grid:#eef0f3; --radius:16px;
+      --ring:#c7d2fe;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0b1020; --card:#0f172a; --ink:#e5e7eb; --ink-soft:#94a3b8;
+        --primary:#60a5fa; --primary-weak:#13233f;
+        --accent:#34d399; --accent-weak:#0f2a22;
+        --warning:#f59e0b; --warning-weak:#2b2111;
+        --grid:#1f2a44; --ring:#27406f;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; padding:28px; background:var(--bg); color:var(--ink);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height:1.45;
+    }
+
+    .wrap{max-width:1100px; margin:auto}
+
+    /* Title */
+    h1{
+      font-size: clamp(20px, 3vw, 28px);
+      margin:0 0 18px 0;
+      font-weight:600;
+      letter-spacing:.1px;
+      display:flex; align-items:center; gap:10px;
+    }
+    h1::before{
+      content:""; width:8px; height:28px; border-radius:999px; background:linear-gradient(180deg, var(--primary), var(--accent));
+      box-shadow:0 0 0 3px var(--primary-weak);
+    }
+
+    /* Cards */
+    .card{
+      background:var(--card); border-radius:var(--radius);
+      padding:18px 20px; margin-bottom:18px;
+      border:1px solid var(--grid);
+      box-shadow: 0 8px 20px rgba(2, 6, 23, .04);
+    }
+    .grid-2{display:grid; grid-template-columns: 2fr 1fr; gap:18px}
+    @media (max-width:960px){.grid-2{grid-template-columns:1fr}}
+
+    .card h3{margin:6px 0 14px 0; font-size:16px; font-weight:600}
+
+    /* Meta list */
+    .meta ul{list-style:none; padding:0; margin:0}
+    .meta li{
+      display:flex; justify-content:space-between; gap:12px;
+      padding:10px 0; border-bottom:1px dashed var(--grid);
+    }
+    .meta li:last-child{border-bottom:none}
+
+    /* Legend “pills” */
+    .legend{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color:var(--ink);
+      padding:6px 10px; border-radius:999px; border:1px solid var(--grid);
+      background:var(--card);
+    }
+    .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
+    .blue{background:var(--primary)} .green{background:var(--accent)}
+
+    .hint{font-size:13px; color:var(--ink-soft)}
+
+    /* Timeline area */
+    .timeline-wrap{position:relative; border:1px solid var(--grid); border-radius:12px; overflow:hidden}
+    #timeline{height:420px; background:linear-gradient(180deg, rgba(99,102,241,.03), transparent)}
+    /* Milestone ribbon */
+    .milestone{
+      position:absolute; top:0; bottom:0; width:0; border-right:2px dashed var(--warning);
+      pointer-events:none;
+    }
+    .milestone::after{
+      content:"Hito: OCT 2025"; position:absolute; top:10px; right:6px;
+      transform:translateX(100%); font-size:12px; color:var(--warning);
+      background:var(--warning-weak); padding:4px 8px; border-radius:8px; border:1px solid rgba(0,0,0,.05);
+      box-shadow:0 4px 10px rgba(0,0,0,.06);
+      white-space:nowrap;
+    }
+
+    /* Table */
+    .table-wrap{border:1px solid var(--grid); border-radius:12px; overflow:auto}
+    table{width:100%; border-collapse:collapse; font-size:14px; min-width:720px}
+    thead th{
+      text-align:left; padding:10px 12px; background:var(--primary-weak); color:var(--ink);
+      border-bottom:1px solid var(--grid); position:sticky; top:0; z-index:1;
+    }
+    tbody td{padding:10px 12px; border-bottom:1px solid var(--grid)}
+    tbody tr:nth-child(even){background:rgba(2, 6, 23, .02)}
+    @media (prefers-color-scheme: dark){
+      tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
+    }
+    tbody tr:hover{background:rgba(37,99,235,.06)}
+    .badge-epica{
+      display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px;
+      background:var(--primary-weak); border:1px solid var(--ring);
+    }
+
+    /* Tiny toolbar */
+    .titlebar{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px
+    }
+    .tools{display:flex; gap:8px}
+    .btn{
+      appearance:none; border:1px solid var(--grid); background:var(--card); color:var(--ink);
+      padding:6px 10px; border-radius:10px; font-size:12px; cursor:pointer;
+    }
+    .btn:hover{box-shadow:0 4px 10px rgba(2,6,23,.06)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cronograma de Proyecto de Grado – Prototipo individual (2025)</h1>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Resumen</h3>
+      <p class="hint">
+        El proyecto se ejecuta con documentación previa y actualización continua: del <b>2025/06/13</b> al <b>2025/06/26</b> documentación y planificación;
+        del <b>2025/06/27</b> al <b>2025/07/24</b> diseño y datos;
+        del <b>2025/07/25</b> al <b>2025/09/30</b> desarrollo de software;
+        del <b>2025/10/03</b> al <b>2025/10/31</b> validación y demo;
+        del <b>2025/11/01</b> al <b>2025/11/10</b> entregables finales; y del <b>2025/11/13</b> al <b>2025/11/17</b> la presentación.
+      </p>
+    </div>
+
+    <div class="card meta">
+      <h3>Metadatos</h3>
+      <ul>
+        <li><span><b>Ámbito</b></span><span>Proyecto de grado individual</span></li>
+        <li><span><b>Épicas</b></span><span>6</span></li>
+        <li><span><b>Tareas</b></span><span>26</span></li>
+        <li><span><b>Horizonte</b></span><span>Junio–Noviembre 2025</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="titlebar">
+      <div class="legend">
+        <span class="pill"><span class="dot blue"></span> Fases</span>
+        <span class="pill"><span class="dot green"></span> Tareas</span>
+      </div>
+      <div class="tools">
+        <button class="btn" id="btnZoomOut">–</button>
+        <button class="btn" id="btnZoomIn">+</button>
+      </div>
+    </div>
+
+    <div class="timeline-wrap">
+      <div id="timeline"></div>
+      <div id="milestone-oct" class="milestone" style="left:0"></div>
+    </div>
+    <div class="hint" style="margin-top:8px">Escala: junio 2025 → noviembre 2025</div>
+  </div>
+
+  <div class="card">
+    <h3>Detalle de tareas</h3>
+    <div class="table-wrap">
+      <table id="tabla-tareas">
+        <thead>
+          <tr>
+            <th>Épica</th>
+            <th>Tarea</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Duración (días)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========= Datos =========
+  const fases = [
+    {epica:'F1 Documentación inicial y planificación',  ini:'2025-06-13', fin:'2025-06-26'},
+    {epica:'F2 Diseño y Datos',                        ini:'2025-06-27', fin:'2025-07-24'},
+    {epica:'F3 Desarrollo de Software',                ini:'2025-07-25', fin:'2025-09-30'},
+    {epica:'F4 Validación y Demo',                     ini:'2025-10-03', fin:'2025-10-31'},
+    {epica:'F5 Documentación final y entregables',     ini:'2025-11-01', fin:'2025-11-10'},
+    {epica:'F6 Presentación',                          ini:'2025-11-13', fin:'2025-11-17'}
+  ];
+
+  const tareas = [
+    {epica:'F1 Documentación inicial y planificación', tarea:'Documento base preliminar (alcance, marco teórico, metodología)', ini:'2025-06-13', fin:'2025-06-20'},
+    {epica:'F1 Documentación inicial y planificación', tarea:'Cronograma y riesgos en documento', ini:'2025-06-21', fin:'2025-06-26'},
+    {epica:'F2 Diseño y Datos', tarea:'Especificación funcional y UX', ini:'2025-06-27', fin:'2025-07-08'},
+    {epica:'F2 Diseño y Datos', tarea:'Modelo de datos y plan de evaluación', ini:'2025-07-09', fin:'2025-07-24'},
+    {epica:'F3 Desarrollo de Software', tarea:'Backend API y base de datos', ini:'2025-08-01', fin:'2025-08-12'},
+    {epica:'F3 Desarrollo de Software', tarea:'Frontend (UI) y navegación', ini:'2025-08-15', fin:'2025-08-26'},
+    {epica:'F3 Desarrollo de Software', tarea:'Integración y pruebas', ini:'2025-09-12', fin:'2025-09-30'},
+    {epica:'F4 Validación y Demo', tarea:'Despliegue de demo en la nube', ini:'2025-10-03', fin:'2025-10-07'},
+    {epica:'F4 Validación y Demo', tarea:'Pruebas y estabilización', ini:'2025-10-10', fin:'2025-10-31'},
+    {epica:'F5 Documentación final y entregables', tarea:'Manual de usuario y guías', ini:'2025-11-01', fin:'2025-11-03'},
+    {epica:'F5 Documentación final y entregables', tarea:'Documentación técnica y redacción final', ini:'2025-11-06', fin:'2025-11-10'},
+    {epica:'F6 Presentación', tarea:'Ensayo y sustentación', ini:'2025-11-13', fin:'2025-11-17'}
+  ];
+
+  // ========= Utilidades =========
+  const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+  const days = (a,b) => Math.round((toDate(b)-toDate(a))/(1000*60*60*24))+1;
+
+  // ========= Render: Google Charts Timeline =========
+  google.charts.load('current', {'packages':['timeline']});
+  google.charts.setOnLoadCallback(drawTimeline);
+
+  let hAxisMin = new Date(2025,5,1); // Junio
+  let hAxisMax = new Date(2025,10,30); // Nov
+
+  function drawTimeline(){
+    const container = document.getElementById('timeline');
+    const chart = new google.visualization.Timeline(container);
+    const dataTable = new google.visualization.DataTable();
+
+    dataTable.addColumn({type:'string', id:'Epica'});
+    dataTable.addColumn({type:'string', id:'Tarea'});
+    dataTable.addColumn({type:'string', role:'style'});   // color
+    dataTable.addColumn({type:'date', id:'Inicio'});
+    dataTable.addColumn({type:'date', id:'Fin'});
+
+    // Fases (azul)
+    for(const f of fases){
+      dataTable.addRow([f.epica, 'Fase', 'color: #2563eb; stroke-color: #1d4ed8; stroke-width: 1', toDate(f.ini), toDate(f.fin)]);
+    }
+    // Tareas (verde)
+    for(const t of tareas){
+      dataTable.addRow([t.epica, t.tarea, 'color: #16a34a; stroke-color: #15803d; stroke-width: 1', toDate(t.ini), toDate(t.fin)]);
+    }
+
+    const options = {
+      timeline: {
+        barLabelStyle: { fontSize: 12, color: getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() },
+        groupByRowLabel: true,
+        rowLabelStyle: { fontSize: 12, color: getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() },
+        colorByRowLabel: false
+      },
+      backgroundColor: 'transparent',
+      avoidOverlappingGridLines: false,
+      height: 420,
+      hAxis: { minValue: hAxisMin, maxValue: hAxisMax }
+    };
+
+    chart.draw(dataTable, options);
+
+    // Posicionar hito (15/oct/2025)
+    const milestone = document.getElementById('milestone-oct');
+    const min = hAxisMin.getTime();
+    const max = hAxisMax.getTime();
+    const hito = new Date(2025,9,15).getTime();
+    const pct = (hito - min) / (max - min);
+    milestone.style.left = (pct * container.clientWidth) + 'px';
+
+    // Rellenar tabla
+    const tbody = document.querySelector('#tabla-tareas tbody');
+    tbody.innerHTML = '';
+    for(const t of tareas){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="badge-epica">${t.epica}</span></td>
+        <td>${t.tarea}</td>
+        <td>${t.ini}</td>
+        <td>${t.fin}</td>
+        <td>${days(t.ini, t.fin)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // Zoom simple de la escala
+  document.getElementById('btnZoomIn').addEventListener('click', () => {
+    hAxisMin = new Date(hAxisMin.getFullYear(), hAxisMin.getMonth()+1, 1);
+    hAxisMax = new Date(hAxisMax.getFullYear(), hAxisMax.getMonth()-1, 28);
+    drawTimeline();
+  });
+  document.getElementById('btnZoomOut').addEventListener('click', () => {
+    hAxisMin = new Date(2025,5,1);
+    hAxisMax = new Date(2025,10,30);
+    drawTimeline();
+  });
+
+  window.addEventListener('resize', () => {
+    if (google && google.visualization && google.visualization.events) drawTimeline();
+  });
+</script>
+</body>
+</html>
